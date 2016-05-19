@@ -1,2 +1,2 @@
-# image-upload-wrapper
+# image-resize-and-preview  
 Simple image upload wrapper

@@ -10,12 +10,13 @@
 <body>
   <div id='wrapper'>
     <input id='imageUpload' type='file'/><br/>
+    <div id='image_holder'></div>
   </div>
   <script src='https://code.jquery.com/jquery-1.11.3.min.js'></script>
   <script src='js/image-upload-wrapper.js'></script>
   <script>
     $(function() {
-      $('input#imageUpload').imageUploader({
+      $('input#imageUpload').simpleImage({
         preview: true,
         max_width: 100,
         max_height: 200,
