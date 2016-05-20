@@ -36,17 +36,6 @@ var foo;
                     $el.val('');
                 }
             },
-            /*
-             FUNCTION: Image File Resizing In Frontend
-             http://stackoverflow.com/questions/10333971/html5-pre-resize-images-before-uploading
-             */
-            resize: function($el, max_width, max_height) {
-
-            },
-            /*
-             FUNCTION: Preview Image
-             http://stackoverflow.com/questions/14069421/show-an-image-preview-before-upload
-             */
             preview: function($el, image_holder) {
                 var $image_holder = $('#' + image_holder);
                 $image_holder.empty();
@@ -59,17 +48,20 @@ var foo;
                 };
                 reader.readAsDataURL($el[0].files[0]);
             },
-            molamola: function($el, max_width, max_height, preview, image_holder) {
+            /*
+             FUNCTION: Preview and Resize Image
+             - http://stackoverflow.com/questions/14069421/show-an-image-preview-before-upload
+             - http://stackoverflow.com/questions/10333971/html5-pre-resize-images-before-uploading
+             */
+            resize_preview: function($el, max_width, max_height, preview, image_holder) {
                 var img = document.createElement("img"); // 원래 이미지를 담을 돔
                 var file = $el[0].files[0];
                 var reader = new FileReader();
-
 
                 reader.onload = function(e) {
                     img.src = e.target.result;
                     var width = img.width; // 원래 이미지 정보
                     var height = img.height;
-
 
                     if(max_width || max_height) { // 리사이즈
                         var canvas = document.createElement("canvas");
@@ -94,8 +86,14 @@ var foo;
 
                         var dataurl = canvas.toDataURL("image/png");
                     }
-
-                    document.getElementById('image').src = dataurl? dataurl : reader.result;
+                    if(preview) { // 프리뷰
+                        var $image_holder = $('#' + image_holder);
+                        $image_holder.empty();
+                        $("<img />", {
+                            "src": dataurl? dataurl : reader.result,
+                            "class": "thumb_image"
+                        }).appendTo($image_holder);
+                    }
                 }
                 reader.readAsDataURL(file);
             }
@@ -111,12 +109,7 @@ var foo;
 
                 if(options.preview || options.max_width || options.max_height) {
                     if (typeof (FileReader) != "undefined") { // 파일리더 지원 여부 확인
-                        /*-- 프리뷰 --*/
-                        //if(options.preview) {
-                        //    Uploader.preview($el, options.preview_container_id);
-                        //}
-                        Uploader.molamola($el, options.max_width, options.max_height, options.preview, options.preview_container_id);
-
+                        Uploader.resize_preview($el, options.max_width, options.max_height, options.preview, options.preview_container_id);
                     } else {
                         alert("This browser not doesn't FileReader.");
                     }
@@ -131,8 +124,7 @@ var foo;
         preview_container_id: "image_holder",
         max_width: undefined, // px
         max_height: undefined, // px
-        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'], // if you don't want to use it, then check it 'false'
+        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'], // if you don't want to use it, check it 'false'
         file_extension_error_message: undefined
     }
-
 })(jQuery);
