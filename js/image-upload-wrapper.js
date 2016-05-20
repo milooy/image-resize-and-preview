@@ -24,6 +24,9 @@ var foo;
                 }
                 return new Blob([ia], {type:mimeString});
             },
+            /*
+             FUNCTION: Check extension after upload file
+             */
             check_extension: function($el, ext_arr, error_msg){
                 var file_ext = $el.val().toLowerCase().split('.').pop();
                 if(ext_arr.map(function(v) {
@@ -38,68 +41,7 @@ var foo;
              http://stackoverflow.com/questions/10333971/html5-pre-resize-images-before-uploading
              */
             resize: function($el, max_width, max_height) {
-                var dataurl = null;
-                var filesToUpload = document.getElementById('photo').files;
-                var file = filesToUpload[0];
 
-                // Create an image
-                var img = document.createElement("img");
-                // Create a file reader
-                var reader = new FileReader();
-                // Set the image once loaded into file reader
-                reader.onload = function(e)
-                {
-                    img.src = e.target.result;
-
-                    img.onload = function () {
-                        var canvas = document.createElement("canvas");
-                        var ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0);
-
-                        var MAX_WIDTH = 800;
-                        var MAX_HEIGHT = 600;
-                        var width = img.width;
-                        var height = img.height;
-
-                        if (width > height) {
-                            if (width > MAX_WIDTH) {
-                                height *= MAX_WIDTH / width;
-                                width = MAX_WIDTH;
-                            }
-                        } else {
-                            if (height > MAX_HEIGHT) {
-                                width *= MAX_HEIGHT / height;
-                                height = MAX_HEIGHT;
-                            }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        var ctx = canvas.getContext("2d");
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        dataurl = canvas.toDataURL("image/jpeg");
-
-                        // Post the data
-                        var fd = new FormData();
-                        fd.append("name", "some_filename.jpg");
-                        fd.append("image", dataurl);
-                        fd.append("info", "lah_de_dah");
-                        $.ajax({
-                            url: '/ajax_photo',
-                            data: fd,
-                            cache: false,
-                            contentType: false,
-                            processData: false,
-                            type: 'POST',
-                            success: function(data){
-                                $('#form_photo')[0].reset();
-                                location.reload();
-                            }
-                        });
-                    } // img.onload
-                }
-                // Load files into file reader
-                reader.readAsDataURL(file);
             },
             /*
              FUNCTION: Preview Image
@@ -111,87 +53,75 @@ var foo;
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     $("<img />", {
-                        "src": e.target.result,
+                        "src": reader.result,
                         "class": "thumb_image"
                     }).appendTo($image_holder);
                 };
                 reader.readAsDataURL($el[0].files[0]);
             },
-            molamola: function() {
-                $('#id_photo').on('change', function () { /*-- 파일 확장자 확인 --*/
-                    if (typeof (FileReader) != "undefined") {
-                        var image_holder = $("#image-holder");
-                        image_holder.empty();
+            molamola: function($el, max_width, max_height, preview, image_holder) {
+                var img = document.createElement("img"); // 원래 이미지를 담을 돔
+                var file = $el[0].files[0];
+                var reader = new FileReader();
 
-                        var img = document.createElement("img");
-                        var reader = new FileReader();
 
-                        reader.onload = function (e) {
-                            img.src = e.target.result;
-                            img.onload = function() {
-                                var canvas = document.createElement("canvas");
-                                var ctx = canvas.getContext("2d");
-                                ctx.drawImage(img, 0, 0);
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    var width = img.width; // 원래 이미지 정보
+                    var height = img.height;
 
-                                var MAX_WIDTH = 500;
-                                var MAX_HEIGHT = 500;
-                                var width = img.width;
-                                var height = img.height;
 
-                                if (width > height) {
-                                    if (width > MAX_WIDTH) {
-                                        height *= MAX_WIDTH / width;
-                                        width = MAX_WIDTH;
-                                    }
-                                } else {
-                                    if (height > MAX_HEIGHT) {
-                                        width *= MAX_HEIGHT / height;
-                                        height = MAX_HEIGHT;
-                                    }
-                                }
-                                canvas.width = width;
-                                canvas.height = height;
+                    if(max_width || max_height) { // 리사이즈
+                        var canvas = document.createElement("canvas");
+                        var ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0); //캔버스 맨 위에 원래 이미지 그림
 
-                                ctx = canvas.getContext("2d");
-                                ctx.drawImage(img, 0, 0, width, height);
+                        if (width > height) {
+                            if (width > max_width) {
+                                height *= max_width / width;
+                                width = max_width;
+                            }
+                        } else {
+                            if (height > max_height) {
+                                width *= max_height / height;
+                                height = max_height;
+                            }
+                        }
+                        canvas.width = width; // 캔버스를 리사이즈 함
+                        canvas.height = height;
+                        var new_ctx = canvas.getContext("2d");
+                        new_ctx.drawImage(img, 0, 0, width, height); // 새로운 width, height로 다시 그림
 
-                                ImageManager.dataURItoBlob(canvas.toDataURL("image/jpeg"));
-                                ImageManager.init.dataurl = ImageManager.dataURItoBlob(canvas.toDataURL("image/jpeg"));
-                            };
-                            $("<img />", {
-                                "src": e.target.result,
-                                "class": "thumb-image"
-                            }).appendTo(image_holder);
-                        };
-                        image_holder.show();
-                        reader.readAsDataURL($(this)[0].files[0]);
-                    } else {
-                        alert("파일 업로드를 지원하지 않는 브라우저입니다. 다른 환경에서 시도해주시면 감사하겠습니다.");
+                        var dataurl = canvas.toDataURL("image/png");
                     }
-                });
+
+                    document.getElementById('image').src = dataurl? dataurl : reader.result;
+                }
+                reader.readAsDataURL(file);
             }
         };
 
         return this.each(function(){
             var options = $.extend({}, $.fn.simpleImage.defaults, opts || {});
             var $el = $(this);
-            console.log('this: ', $el)
-
             $($el).on('change', function () { // 이미지파일이 올라오려 함
-                Uploader.check_extension($el, options.file_extension, options.file_extension_error_message);
-                if (typeof (FileReader) != "undefined") { // 파일리더 지원 여부 확인
-                    /*-- 프리뷰 --*/
-                    if(options.preview) {
-                        Uploader.preview($el, options.preview_container_id);
-                    }
-
-                } else {
-                    alert("This browser not allow FileReader.");
+                if(Uploader.check_extension){
+                    Uploader.check_extension($el, options.file_extension, options.file_extension_error_message);
                 }
 
+                if(options.preview || options.max_width || options.max_height) {
+                    if (typeof (FileReader) != "undefined") { // 파일리더 지원 여부 확인
+                        /*-- 프리뷰 --*/
+                        //if(options.preview) {
+                        //    Uploader.preview($el, options.preview_container_id);
+                        //}
+                        Uploader.molamola($el, options.max_width, options.max_height, options.preview, options.preview_container_id);
+
+                    } else {
+                        alert("This browser not doesn't FileReader.");
+                    }
+                }
             });
-
-
         });
     };
 
@@ -199,9 +129,9 @@ var foo;
     $.fn.simpleImage.defaults = {
         preview: false,
         preview_container_id: "image_holder",
-        max_width: 100,
-        max_height: 200,
-        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'],
+        max_width: undefined, // px
+        max_height: undefined, // px
+        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'], // if you don't want to use it, then check it 'false'
         file_extension_error_message: undefined
     }
 

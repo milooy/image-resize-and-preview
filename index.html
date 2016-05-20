@@ -11,6 +11,7 @@
   <div id='wrapper'>
     <input id='imageUpload' type='file'/><br/>
     <div id='image_holder'></div>
+    <image id='image'></image>
   </div>
   <script src='https://code.jquery.com/jquery-1.11.3.min.js'></script>
   <script src='js/image-upload-wrapper.js'></script>
@@ -19,7 +20,7 @@
       $('input#imageUpload').simpleImage({
         preview: true,
         max_width: 100,
-        max_height: 200,
+//        max_height: 200,
         //file_extension_error_message: '썸네일은 이미지 파일(jpg, png, gif, bmp)만 등록 가능합니다.'
         //file_extension: ['bmp', 'jpeg']
       });
