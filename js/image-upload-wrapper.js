@@ -85,6 +85,13 @@ var foo;
                         new_ctx.drawImage(img, 0, 0, width, height); // 새로운 width, height로 다시 그림
 
                         var dataurl = canvas.toDataURL("image/png");
+
+                        //console.log('value:', $el.value, $el.val(), $el[0].value, $el[0].val)
+                        //$el[0].value = Uploader._dataURItoBlob(canvas.toDataURL("image/jpeg"));
+                        //console.log('value:', $el[0].value)
+                        //console.log("힝", $el.closest('form').serializeArray());
+                        $.fn.simpleImage.resizedImage = Uploader._dataURItoBlob(canvas.toDataURL("image/jpeg"));
+                        console.log("리사이즈:", $.fn.simpleImage.resizedImage);
                     }
                     if(preview) { // 프리뷰
                         var $image_holder = $('#' + image_holder);
@@ -96,6 +103,7 @@ var foo;
                     }
                 }
                 reader.readAsDataURL(file);
+                console.log("힝2", $el.closest('form').serialize());
             }
         };
 
@@ -110,6 +118,7 @@ var foo;
                 if(options.preview || options.max_width || options.max_height) {
                     if (typeof (FileReader) != "undefined") { // 파일리더 지원 여부 확인
                         Uploader.resize_preview($el, options.max_width, options.max_height, options.preview, options.preview_container_id);
+                        console.log("힝3", $el.closest('form').serialize());
                     } else {
                         alert("This browser not doesn't FileReader.");
                     }
@@ -117,6 +126,8 @@ var foo;
             });
         });
     };
+
+    $.fn.simpleImage.resizedImage =  undefined;
 
     // 기본값을 외부에서 변경 가능
     $.fn.simpleImage.defaults = {
