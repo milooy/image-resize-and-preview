@@ -7,7 +7,7 @@ var foo;
         var Uploader = {
             _dataURItoBlob: function(dataURI) {
                 /*
-                 이미지 리사이즈 후 생긴 data uri를 파일로 변환
+                 FUNCTION: change data uri to file (use after image resizing)
                  http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
                  */
                 var byteString;
@@ -27,26 +27,18 @@ var foo;
             /*
              FUNCTION: Check extension after upload file
              */
-            check_extension: function($el, ext_arr, error_msg){
+            check_extension: function($el, ext_arr, error_msg, image_holder){
                 var file_ext = $el.val().toLowerCase().split('.').pop();
                 if(ext_arr.map(function(v) {
                         return v.toLowerCase();
                     }).indexOf(file_ext) < 0) {
+
                     alert(error_msg || 'You can upload file with ' + ext_arr.join(', '));
                     $el.val('');
+                    if(image_holder) {
+                        $('#' + image_holder).empty();
+                    }
                 }
-            },
-            preview: function($el, image_holder) {
-                var $image_holder = $('#' + image_holder);
-                $image_holder.empty();
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $("<img />", {
-                        "src": reader.result,
-                        "class": "thumb_image"
-                    }).appendTo($image_holder);
-                };
-                reader.readAsDataURL($el[0].files[0]);
             },
             /*
              FUNCTION: Preview and Resize Image
@@ -85,13 +77,7 @@ var foo;
                         new_ctx.drawImage(img, 0, 0, width, height); // 새로운 width, height로 다시 그림
 
                         var dataurl = canvas.toDataURL("image/png");
-
-                        //console.log('value:', $el.value, $el.val(), $el[0].value, $el[0].val)
-                        //$el[0].value = Uploader._dataURItoBlob(canvas.toDataURL("image/jpeg"));
-                        //console.log('value:', $el[0].value)
-                        //console.log("힝", $el.closest('form').serializeArray());
-                        $.fn.simpleImage.resizedImage = Uploader._dataURItoBlob(canvas.toDataURL("image/jpeg"));
-                        console.log("리사이즈:", $.fn.simpleImage.resizedImage);
+                        $.fn.simpleImage.resizedImage = Uploader._dataURItoBlob(dataurl);
                     }
                     if(preview) { // 프리뷰
                         var $image_holder = $('#' + image_holder);
@@ -103,39 +89,49 @@ var foo;
                     }
                 }
                 reader.readAsDataURL(file);
-                console.log("힝2", $el.closest('form').serialize());
             }
         };
 
         return this.each(function(){
             var options = $.extend({}, $.fn.simpleImage.defaults, opts || {});
             var $el = $(this);
+
+            if(options.accept_only_image) {
+                $el.attr('accept', "image/*");
+            }
+
             $($el).on('change', function () { // 이미지파일이 올라오려 함
                 if(Uploader.check_extension){
-                    Uploader.check_extension($el, options.file_extension, options.file_extension_error_message);
+                    Uploader.check_extension($el, options.file_extension, options.file_extension_error_message, options.preview_container_id);
                 }
 
                 if(options.preview || options.max_width || options.max_height) {
                     if (typeof (FileReader) != "undefined") { // 파일리더 지원 여부 확인
                         Uploader.resize_preview($el, options.max_width, options.max_height, options.preview, options.preview_container_id);
-                        console.log("힝3", $el.closest('form').serialize());
                     } else {
-                        alert("This browser not doesn't FileReader.");
+                        alert(options.file_upload_error_message);
                     }
                 }
             });
         });
     };
 
+    /*
+     VARIABLE: Resized Image file (Use in form data / ajax)
+     */
     $.fn.simpleImage.resizedImage =  undefined;
 
-    // 기본값을 외부에서 변경 가능
+    /*
+     OPTION: You avalable to change default outside the plugin
+     */
     $.fn.simpleImage.defaults = {
-        preview: false,
+        accept_only_image: false, /* true or false */
+        preview: false, /* true or false */
         preview_container_id: "image_holder",
-        max_width: undefined, // px
-        max_height: undefined, // px
-        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'], // if you don't want to use it, check it 'false'
-        file_extension_error_message: undefined
+        max_width: undefined, /* px */
+        max_height: undefined, /* px */
+        file_extension: ['png', 'jpeg', 'jpg', 'gif', 'bmp'], /* If you don't want to use it, check it 'false' */
+        file_extension_error_message: undefined,
+        file_upload_error_message: "This browser doesn't support FileReader. Use another browser."
     }
 })(jQuery);
