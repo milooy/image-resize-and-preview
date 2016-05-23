@@ -5,24 +5,32 @@ var foo;
 
         /*-- 필요한 함수 모음 --*/
         var Uploader = {
-            _dataURItoBlob: function(dataURI) {
+            _dataURItoFile: function(dataURI, filename) {
                 /*
-                 FUNCTION: change data uri to file (use after image resizing)
-                 http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+                 FUNCTION: change data uri -> blob -> file (after image resizing)
+                 - http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
+                 - http://stackoverflow.com/questions/6664967/how-to-give-a-blob-uploaded-as-formdata-a-file-name
                  */
-                var byteString;
-                if (dataURI.split(',')[0].indexOf('base64') >= 0)
-                    byteString = atob(dataURI.split(',')[1]);
-                else
-                    byteString = unescape(dataURI.split(',')[1]);
+                //var byteString;
+                //if (dataURI.split(',')[0].indexOf('base64') >= 0)
+                //    byteString = atob(dataURI.split(',')[1]);
+                //else
+                //    byteString = decodeURI(dataURI.split(',')[1]);
+                //
+                //var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+                //
+                //var ia = new Uint8Array(byteString.length);
+                //for (var i = 0; i < byteString.length; i++) {
+                //    ia[i] = byteString.charCodeAt(i);
+                //}
+                //return new Blob([ia], {type:mimeString});
 
-                var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-                var ia = new Uint8Array(byteString.length);
-                for (var i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
+                var blobBin = atob(dataURI.split(',')[1]);
+                var array = [];
+                for(var i = 0; i < blobBin.length; i++) {
+                    array.push(blobBin.charCodeAt(i));
                 }
-                return new Blob([ia], {type:mimeString});
+                return new File([new Blob([new Uint8Array(array)], {type: 'image/png'})], filename+'.png');
             },
             /*
              FUNCTION: Check extension after upload file
@@ -76,8 +84,8 @@ var foo;
                         var new_ctx = canvas.getContext("2d");
                         new_ctx.drawImage(img, 0, 0, width, height); // 새로운 width, height로 다시 그림
 
-                        var dataurl = canvas.toDataURL("image/png");
-                        $.fn.simpleImage.resizedImage = Uploader._dataURItoBlob(dataurl);
+                        var dataurl = canvas.toDataURL("image/png", 0.5);
+                        $.fn.simpleImage.resizedImage = Uploader._dataURItoFile(dataurl, file.name);
                     }
                     if(preview) { // 프리뷰
                         var $image_holder = $('#' + image_holder);
