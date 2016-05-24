@@ -5,60 +5,38 @@ var foo;
 
         /*-- 필요한 함수 모음 --*/
         var Uploader = {
+            /*
+             FUNCTION: html canvas.toDataURL debug in iOS, android
+             - http://jimdoescode.blogspot.kr/2011/11/trials-and-tribulations-with-html5.html
+             - https://github.com/owencm/javascript-jpeg-encoder/blob/master/jpeg_encoder_basic.js
+            */
             override_toDataURL: function() {
                 var tdu = HTMLCanvasElement.prototype.toDataURL;
                 HTMLCanvasElement.prototype.toDataURL = function(type)
                 {
-                    alert("프로토타입 들어옴");
                     var res = tdu.apply(this,arguments);
-
                     if(res.substr(0,6) == "data:,")
                     {
                         // TODO: iOS나 안드로이드 구 버전에서 toDataURL이 에러나는거 방지
                         alert("데이터가 안들어가면 인코더를 돌려야 함");
-                        alert(new JPEGEncoder());
                         var encoder = new JPEGEncoder();
-                        alert(encoder.encode(this.getContext("2d").getImageData(0,0,this.width,this.height), 90, true));
                         return encoder.encode(this.getContext("2d").getImageData(0,0,this.width,this.height), 90, true);
                     }
                     else return res;
                 };
             },
-            _dataURItoFile: function(dataURI, filename) {
+            _dataURItoBlob: function(dataURI, filename) {
                 /*
-                 FUNCTION: change data uri -> blob -> file (after image resizing)
+                 FUNCTION: change data uri -> blob (after image resizing)
                  - http://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
                  - http://stackoverflow.com/questions/6664967/how-to-give-a-blob-uploaded-as-formdata-a-file-name
                  */
-                // TODO: 컴에선 되고 아이오에스에선 안됨
-                //alert('들어가지긴 하니?'+dataURI);
-                //var blobBin = atob(dataURI.split(',')[1]);
-                //var array = [];
-                //for(var i = 0; i < blobBin.length; i++) {
-                //    array.push(blobBin.charCodeAt(i));
-                //}
-                //alert('리턴은 되니?'+new File([new Blob([new Uint8Array(array)], {type: 'image/png'})], filename+'.png'));
-                //return new File([new Blob([new Uint8Array(array)], {type: 'image/png'})], filename+'.png');
-
-
-
-                // TODO: 컴 아이오에스 다 되는데 File로 변환이 안됨
-                var byteString;
-                if (dataURI.split(',')[0].indexOf('base64') >= 0)
-                    byteString = atob(dataURI.split(',')[1]);
-                else
-                    byteString = decodeURI(dataURI.split(',')[1]);
-
-                var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-                var ia = new Uint8Array(byteString.length);
-                for (var i = 0; i < byteString.length; i++) {
-                    ia[i] = byteString.charCodeAt(i);
+                var blobBin = atob(dataURI.split(',')[1]);
+                var array = [];
+                for(var i = 0; i < blobBin.length; i++) {
+                    array.push(blobBin.charCodeAt(i));
                 }
-                var blob = new Blob([ia], {type:'image/jpeg'});
-                alert("블롭:"+ blob instanceof Blob);
-                //return new Blob([ia], {type:'image/jpeg'});
-                return  new Blob([ia], {type:mimeString});
+                return new Blob([new Uint8Array(array)], {type: 'image/jpeg'});
             },
             /*
              FUNCTION: Check extension after upload file
@@ -93,12 +71,9 @@ var foo;
 
                         var width = img.width; // 원래 이미지 정보
                         var height = img.height;
-                        alert('위드쓰는 되냐'+width+height);
 
                         if(max_width || max_height) { // 리사이즈
-
-                            //var canvas = document.createElement("canvas");
-                            var canvas = $('<canvas/>', {height: 1000, width: 1000})[0];
+                            var canvas = document.createElement("canvas");
                             var ctx = canvas.getContext("2d");
                             ctx.drawImage(img, 0, 0); //캔버스 맨 위에 원래 이미지 그림
 
@@ -121,9 +96,7 @@ var foo;
                             new_ctx.drawImage(img, 0, 0, width, height); // 새로운 width, height로 다시 그림
                             var dataurl = canvas.toDataURL("image/jpeg");
 
-                            alert("데이터 유아렐"+ dataurl);
-                            $.fn.simpleImage.resizedImage = Uploader._dataURItoFile(dataurl, file.name);
-                            alert('여기가 되어야함' + $.fn.simpleImage.resizedImage instanceof Blob);
+                            $.fn.simpleImage.resizedImage = Uploader._dataURItoBlob(dataurl, file.name);
                         }
                         if(preview) { // 프리뷰
                             var $image_holder = $('#' + image_holder);
@@ -134,7 +107,7 @@ var foo;
                             }).appendTo($image_holder);
                         }
                     }
-                }
+                };
                 reader.readAsDataURL(file);
             }
         };
